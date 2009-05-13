@@ -114,104 +114,104 @@ $.inplaceForm.defaultImage = '/images/loading.gif';
 
 $.extend($.inplaceForm.prototype, {
 
-	init: function(){
-		var $this = this;
+    init: function(){
+        var $this = this;
 
-		$this.cancelButton.click(function(){
-			$this.cancelForm();
-			return false;
-		});
+        $this.cancelButton.click(function(){
+            $this.cancelForm();
+            return false;
+        });
 
-		this.form.bindsaveForm(function(){
-			return $this.submit();
-		});
+        this.form.bindsaveForm(function(){
+            return $this.submit();
+        });
 
-		//standard form submission bindage
-		this.form.submit(function(){
-			return $this.submit();
-		});
-	},
+        //standard form submission bindage
+        this.form.submit(function(){
+            return $this.submit();
+        });
+    },
 
-	submitResponseHandler: function(data){
+    submitResponseHandler: function(data){
 
-		this.clearErrors();
+        this.clearErrors();
 
-		if(data.success){
-			//if no errors, call the derived class' success function.
-			this.submitSuccess(data);
-		}
-		else
-		{
-			//else fill out any errors.
-			if(this.settings.error.call(this, data.errors)){
-				for(var k in data.errors){
-					if(this.settings.errorSelectors[k]){
-						this.form.find(this.settings.errorSelectors[k]).html(data.errors[k]);
-					}
-				}
-			}
-		}
+        if(data.success){
+            //if no errors, call the derived class' success function.
+            this.submitSuccess(data);
+        }
+        else
+        {
+            //else fill out any errors.
+            if(this.settings.error.call(this, data.errors)){
+                for(var k in data.errors){
+                    if(this.settings.errorSelectors[k]){
+                        this.form.find(this.settings.errorSelectors[k]).html(data.errors[k]);
+                    }
+                }
+            }
+        }
 
-		//reset the form for another submission
-		this.submitted = false;
-		this.cancelButton.show();
-		this.loadingImg.hide();
-		this.form.find('input:submit').removeAttr('disabled');
-	},
+        //reset the form for another submission
+        this.submitted = false;
+        this.cancelButton.show();
+        this.loadingImg.hide();
+        this.form.find('input:submit').removeAttr('disabled');
+    },
 
-	submit: function(){
-		if(!this.submitted){
+    submit: function(){
+        if(!this.submitted){
 
-			//signal that we are waiting for a response.
-			this.submitted = true;
+            //signal that we are waiting for a response.
+            this.submitted = true;
 
-			//call the callback
-			this.settings.submit.call(this);
+            //call the callback
+            this.settings.submit.call(this);
 
-			//disallow cancel or another submission
-			this.cancelButton.hide();
-			this.loadingImg.show();
-			var submitButton = this.form.find('input:submit');
-			submitButton.attr('disabled','disabled');
+            //disallow cancel or another submission
+            this.cancelButton.hide();
+            this.loadingImg.show();
+            var submitButton = this.form.find('input:submit');
+            submitButton.attr('disabled','disabled');
 
-			var $this = this;
-			this.form.ajaxSubmit({
-				success: function(data){
-					$this.submitResponseHandler(data);
-				},
-				iframe: $this.settings.iframe,
-				dataType: 'json'
-			});
-		}
+            var $this = this;
+            this.form.ajaxSubmit({
+                success: function(data){
+                    $this.submitResponseHandler(data);
+                },
+                iframe: $this.settings.iframe,
+                dataType: 'json'
+            });
+        }
 
-		return false;
-	},
+        return false;
+    },
 
-	clearErrors: function(){
-		for(var k in this.settings.errorSelectors){
-			this.form.find(this.settings.errorSelectors[k]).html('');
-		}
-	}, 
+    clearErrors: function(){
+        for(var k in this.settings.errorSelectors){
+            this.form.find(this.settings.errorSelectors[k]).html('');
+        }
+    }, 
 
-	clearForm: function(){
-		this.clearErrors();
-		this.form.find('textarea').val('');
-		this.form.find('input:text').val('').focus().blur();
-	},
+    clearForm: function(){
+        this.clearErrors();
+        this.form.find('textarea').val('');
+        this.form.find('input:text').val('').focus().blur();
+    },
 
-	focusFirst: function(){
-		$(this.form.find('input:text')[0]).focus()
-	},
+    focusFirst: function(){
+        $(this.form.find('input:text')[0]).focus()
+    },
 
-	cancelForm: function(){
-		//implement this!
-		alert('NOT IMPLEMENTED');
-	},
+    cancelForm: function(){
+        //implement this!
+        alert('NOT IMPLEMENTED');
+    },
 
-	submitSuccess: function(data){
-		//implement this!
-		alert('NOT IMPLEMENTED');
-	}
+    submitSuccess: function(data){
+        //implement this!
+        alert('NOT IMPLEMENTED');
+    }
 });
 /************************/
 
