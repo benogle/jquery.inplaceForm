@@ -388,18 +388,20 @@ $.extend($.inplaceListAdder.prototype, {
 
         link = $('<a href="#" class="ila-item-insert" title="add a new item here"></a>');
         link.attr('index', index);
-        link.data('adder', this);
         
-        //I am storing the current adder object in the link's 'data store' area.
-        //This is to avoid using another adder that may not be the object that 
-        //originally created the link. 
+        //pass the 'current' adder to the link click callback. If we just did an 
+        //adder = this, adder would be the last adder to call this function when 
+        //the link is clicked.
+        
+        (function(adder){
+        
+            link.click(function(){
+                var $this = $(this); 
+                adder.insertForm($this);
+                return false;
+            });
 
-        link.click(function(){
-            var $this = $(this); 
-            var adder = $this.data('adder');
-            adder.insertForm($this);
-            return false;
-        });
+        })(this);
 
         return link;
     },
@@ -451,6 +453,38 @@ $.extend($.inplaceListAdder.prototype, {
 
     }//end fn
 });
+
+
+/* 
+    $.inplaceForm is the BASE class.
+    
+    Required settings are:
+    
+    {
+        parent: '#list',
+        loadingImage: '/path/to/img.gif',
+        iframe: false,
+
+        //callbacks
+        edit: function(){return null;}, //null makes the plugin look for the hidden data
+        submit: function(){},
+        success: function(newItem){return true;},
+        postsuccess: function(newItem){},
+        error: function(errorDict){return true;},
+
+        //selectors
+        editLinkSelector: '.editlink',
+        itemSelector: '.myitem',
+        displayDataSelector: '.displayData',
+        editDataSelector: '.editData',
+        loadingSelector: '.loading',
+        cancelSelector: '.cancel',
+        errorSelectors:{} //key value pairs: { ErrorKey: '#selectorForError' }
+    }
+    
+    inplaceForm handles the form submission and error placement.
+*/
+
 
 
 
