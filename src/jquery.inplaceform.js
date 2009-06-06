@@ -60,6 +60,7 @@ $.fn.bindsaveForm = function(submitFn){
                 if(targ.parents('#' + $this[0].id).length > 0 && targ.is('select, textarea, input:text')){
                     return submitFn();
                 }
+                return true;
             });
         }
         else{ //ff, opera, and safari work the easy way.
@@ -473,10 +474,10 @@ $.extend($.inplaceListAdder.prototype, {
         error: function(errorDict){return true;},
 
         //selectors
-        editLinkSelector: '.editlink',
+        editLinkSelector: '.edit-link',
         itemSelector: '.myitem',
-        displayDataSelector: '.displayData',
-        editDataSelector: '.editData',
+        displayDataSelector: '.display-data',
+        editDataSelector: '.edit-data',
         loadingSelector: '.loading',
         cancelSelector: '.cancel',
         errorSelectors:{} //key value pairs: { ErrorKey: '#selectorForError' }
@@ -485,6 +486,154 @@ $.extend($.inplaceListAdder.prototype, {
     inplaceForm handles the form submission and error placement.
 */
 
+
+$.fn.inplaceListEditor = function(listSelector, options){
+    var defaults = {
+
+        //inplaceListAdd extensions
+        mode: 'insert', //insert, append, prepend
+
+        //inplaceForm settings follow...
+        
+        parent: listSelector,
+        loadingImage: $.inplaceForm.defaultImage,
+        iframe: false,
+        
+        //callbacks
+        edit: function(item){return null;}, //null makes the plugin look for the hidden data
+        submit: function(){},
+        success: function(newItem){return true;},
+        postsuccess: function(newItem){},
+        error: function(errorDict){return true;},
+        
+        //selectors
+        editLinkSelector: '.edit-link',
+        itemSelector: '.myitem',
+        displayDataSelector: '.display-data',
+        editDataSelector: '.edit-data',
+        loadingSelector: '.loading',
+        cancelSelector: '.cancel',
+        errorSelectors:{} //key value pairs: { ErrorKey: '#selectorForError' }
+    };
+    
+    var opts = $.extend(true, {}, defaults, options);
+    
+    return new $.inplaceListEditor(opts, this[0]);
+};
+
+//$.inplaceListAdder constructor
+$.inplaceListEditor = function(settings, form){
+    //call base class constructor
+    $.inplaceForm.call(this, settings, form);
+};
+
+//extend base class
+$.extend($.inplaceListEditor.prototype, $.inplaceForm.prototype);
+
+//function definitions
+$.extend($.inplaceListEditor.prototype, {
+
+    init: function(){
+        $.inplaceForm.prototype.init.call(this);
+
+        var $this = this;
+        this.form.hide();
+        this.list.find(this.settings.itemSelector).each(function(){
+            $this._prepareItem($(this));
+        });
+    },
+    
+    _prepareItem: function(item){
+        item.find(this.settings.editDataSelector).hide();
+        this._bindEdit(item);
+    },
+    
+    _bindEdit: function(item){
+        var $this = this;
+        item.find(this.settings.editLinkSelector).click(function(){
+            $this.insertForm($(this).parents($this.settings.itemSelector))
+            return false;
+        });
+    },
+    
+    extractEditData: function(item){
+        var data = {};
+        item.find(this.settings.editDataSelector).children().each(function(){
+            var inp = $(this).attr('input');
+            if(inp)
+                data[inp] = $(this).text();
+        });
+        return data;
+    },
+    
+    insertEditData: function(data){
+        for(var k in data){
+            this.form.find("input[name='"+k+"'], textarea[name='"+k+"']").val(data[k]);
+        }
+    },
+
+    insertForm: function(item){
+    
+        if(!this.submitted){
+            this.cancelForm();
+            
+            //get the data to be edited
+            var edata = this.settings.edit.call(this, item); //user can grab the data if they want
+            if(edata == null)
+                edata = this.extractEditData(item);
+            
+            //place the data
+            this.insertEditData(edata);
+            
+            //display the form, hide the data
+            var ddata = item.find(this.settings.displayDataSelector);
+            ddata.hide();
+            this.form.insertAfter(ddata);
+            this.form.show();
+            this.focusFirst();
+        }
+    },
+
+    cancelForm: function(){
+        this.clearForm();
+        
+        var prev = this.form.prev();
+        
+        if(prev.is(this.settings.displayDataSelector)){
+            prev.show();
+            this.form.hide();
+        }
+    },
+
+    insertNewData: function(oldItem, newData){
+        
+        oldItem.replaceWith(newData);
+
+        this._prepareItem(newData);
+    },
+
+    submitSuccess: function(data){
+
+        if(data.item.length > 0){
+            data = $(data.item);
+            if(this.settings.success.call(this, data)){
+                
+                var item = this.form.parents(this.settings.itemSelector);
+                
+                this.form.hide();
+                this.form.insertAfter(this.list); //move so we dont delete it.
+
+                this.insertNewData(item, data);
+
+                this.settings.postsuccess.call(this, data);
+            }
+        }
+        else{
+            alert('No data was returned');
+        }
+
+    }//end fn
+});
 
 
 
